@@ -4,13 +4,18 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(express.static("public"));
-app.get("/video", (req, res) => {
+app.get("/video/:id", (req, res) => {
+  let videoId = req.params.id;
+  console.log(videoId);
+  if (!videoId) {
+    return res.status(400).send("Requires VideoId Parameter");
+  }
   let { range } = req.headers;
   if (!range) {
     return res.status(400).send("Requires Range header");
   }
 
-  let videoSize = fs.statSync("videos/video.mp4").size;
+  let videoSize = fs.statSync(`videos/${videoId}.mp4`).size;
   // parse range
   // ejemplo: "Bytes=32324-"
   const CHUNK_SIZE = 10 ** 6; // 1MB
@@ -25,7 +30,7 @@ app.get("/video", (req, res) => {
   };
   res.writeHead(206, headers);
 
-  let stream = fs.createReadStream("videos/video.mp4", { start, end });
+  let stream = fs.createReadStream(`videos/${videoId}.mp4`, { start, end });
   stream.pipe(res);
 });
 app.listen(port, () => {
